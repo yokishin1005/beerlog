@@ -9,5 +9,5 @@ import os
 main_path = os.path.dirname(os.path.abspath(__file__))
 path = os.chdir(main_path)
 print(path)
-engine = create_engine("sqlite:///CRM.db", echo=True)
+engine = create_engine("sqlite:///beerlog.db", echo=True)
 

@@ -1,0 +1,11 @@
+.next/
+node_modules/
+.env
+/jsonconfig.json
+/next-env.d.ts
+/package-lock.json
+/package.json
+DB_Source/
+__pycache__/
+backend_env/
+

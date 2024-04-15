@@ -1,0 +1,99 @@
+.container {
+  margin: 0 auto;
+  max-width: 1024px;
+}
+
+.profileCard {
+  margin: 1rem;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+}
+
+.profileImage {
+  width: 12rem;
+  height: 12rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-right: 2rem;
+  flex-shrink: 0;
+}
+
+.profileImage:hover {
+  transform: scale(1.1); /* 画像を10%大きくする */
+}
+
+.profileImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileInfo {
+  flex-grow: 1;
+}
+
+.profileName {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #000;
+}
+
+.profileDescription {
+  margin-bottom: 1.5rem;
+  color: #000;
+}
+
+.profileStats {
+  display: flex;
+  gap: 2rem;
+}
+
+.profileStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profileStatLabel {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.profileStatValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000;
+}
+
+.postGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin-top: 1rem;
+}
+
+.postImage {
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.postImage img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.postImage img:hover {
+  transform: scale(1.1); /* 画像を10%大きくする */
+}

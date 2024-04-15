@@ -2,8 +2,8 @@ from flask import Flask, request
 from flask import jsonify
 import json
 from flask_cors import CORS
-
 from db_control import crud, mymodels
+import base64
 
 import requests
 
@@ -16,51 +16,78 @@ CORS(app)
 @app.route("/")
 def index():
     return "<p>Flask top page!</p>"
- 
-@app.route("/customers", methods=['POST'])
-def create_customer():
-    values = request.get_json()
-    # values = {
-    #     "customer_id": "C005",
-    #     "customer_name": "佐藤Aこ",
-    #     "age": 64,
-    #     "gender": "女"
-    # }
-    tmp = crud.myinsert(mymodels.Customers, values)
-    result = crud.myselect(mymodels.Customers, values.get("customer_id"))
-    return result, 200
 
-@app.route("/customers", methods=['GET'])
-def read_one_customer():
-    model = mymodels.Customers
-    target_id = request.args.get('customer_id') #クエリパラメータ
-    result = crud.myselect(mymodels.Customers, target_id)
-    return result, 200
+from flask import Flask, request, jsonify
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from flask_cors import CORS
+from db_control import crud, mymodels
+from werkzeug.security import check_password_hash
 
-@app.route("/allcustomers", methods=['GET'])
-def read_all_customer():
-    model = mymodels.Customers
-    result = crud.myselectAll(mymodels.Customers)
-    return result, 200
+app = Flask(__name__)
+CORS(app)
 
-@app.route("/customers", methods=['PUT'])
-def update_customer():
-    print("I'm in")
-    values = request.get_json()
-    values_original = values.copy()
-    model = mymodels.Customers
-    # values = {  "customer_id": "C004",
-    #             "customer_name": "鈴木C子",
-    #             "age": 44,
-    #             "gender": "男"}
-    tmp = crud.myupdate(model, values)
-    result = crud.myselect(mymodels.Customers, values_original.get("customer_id"))
-    return result, 200
+app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # JWTの秘密鍵を設定してください
+jwt = JWTManager(app)
 
-@app.route("/customers", methods=['DELETE'])
-def delete_customer():
-    model = mymodels.Customers
-    target_id = request.args.get('customer_id') #クエリパラメータ
+@app.route("/")
+def index():
+    return "<p>Flask top page!</p>"
+
+@app.route('/login', methods=['POST'])
+def login():
+    user_id = request.json.get('user_id', None)
+    password = request.json.get('user_password', None)
+    user_dict = crud.myselect(mymodels.Users, user_id)
+    
+    if user_dict and check_password_hash(user_dict['user_password'], password):
+        access_token = create_access_token(identity=user_dict['user_id'])
+        return jsonify(access_token=access_token, user_id=user_dict['user_id']), 200
+    else:
+        return jsonify({"msg": "ユーザーIDまたはパスワードが間違っています"}), 401
+
+@app.route("/user", methods=['GET'])
+@jwt_required()
+def read_user():
+    user_id = get_jwt_identity()  # JWTからユーザーIDを取得
+    result_dict = crud.myselect(mymodels.Users, user_id)
+    
+    if result_dict is None:
+        return jsonify({"message": "User not found"}), 404
+    
+    return jsonify(result_dict), 200
+
+
+@app.route("/post", methods=['GET'])
+def get_post():
+    result = crud.read_post(mymodels.Post.post_id)
+    
+    if result is None:
+        return jsonify({"error": "post not found"}), 400
+    
+    return jsonify(result), 200
+
+def create_post(user_id, store_name, review, rating):
+    session = Session()
+    try:
+        store = session.query(Store).filter_by(store_name=store_name).first()
+        if store:
+            post = Post(user_id=user_id, store_id=store.store_id, review=review, rating=rating)
+            session.add(post)
+            session.commit()
+            return post
+        else:
+            raise ValueError(f"Store '{store_name}' not found.")
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+
+@app.route("/user", methods=['DELETE'])
+def delete_post():
+    model = mymodels.Post
+    target_id = request.args.get('post_id') #クエリパラメータ
     result = crud.mydelete(model, target_id)
     return result, 200
 

@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+
+/* フォントを使用する */
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+/* LPのロゴのアニメーション */
+@keyframes fadeInScaleUp {
+    0% {
+    opacity: 0;
+    transform: scale(0.8);
+    }
+    100% {
+    opacity: 1;
+    transform: scale(1);
+    }
+    }
+.animate-fadeInScaleUp {
+    animation: fadeInScaleUp 1.5s ease-out forwards;
+}
+
+/* LINEのアイコン色とホバー時の色 */
+.btn-line {
+  background-color: #06C755;
+}
+.btn-line:hover {
+  background-color: #04A14B;
+}
