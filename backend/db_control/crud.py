@@ -108,51 +108,47 @@ def read_post(post_id):
     finally:
         session.close()
         
-def myupdate(mymodel, values):
+def edit_post(post_id, values):
     # session構築
     Session = sessionmaker(bind=engine)
     session = Session()
-    user_id = values.pop("user_id")
-    
+
     try:
         # トランザクションを開始
         with session.begin():
-            # Usersテーブルの更新
-            user_query = update(Users).where(Users.user_id == user_id).values(values)
-            session.execute(user_query)
+            # Postsテーブルの更新前に `photos` を除外
+            photos_data = values.pop("photos", [])
             
             # Postsテーブルの更新
-            posts_data = values.pop("posts", [])
-            for post_data in posts_data:
-                post_id = post_data.pop("post_id", None)
-                if post_id:
-                    post_query = update(Post).where(Post.post_id == post_id).values(post_data)
-                    session.execute(post_query)
+            post_query = update(Post).where(Post.post_id == post_id).values(values)
+            session.execute(post_query)
+
+            # Photosテーブルの更新
+            for photo_data in photos_data:
+                photo_id = photo_data.pop("photo_id", None)
+                if photo_id:
+                    photo_query = update(Photo).where(Photo.photo_id == photo_id).values(photo_data)
+                    session.execute(photo_query)
                 else:
-                    post = Post(user_id=user_id, **post_data)
-                    session.add(post)
-                    
-                # Photosテーブルの更新
-                photos_data = post_data.pop("photos", [])
-                for photo_data in photos_data:
-                    photo_id = photo_data.pop("photo_id", None)
-                    if photo_id:
-                        photo_query = update(Photo).where(Photo.photo_id == photo_id).values(photo_data)
-                        session.execute(photo_query)
-                    else:
-                        photo = Photo(post_id=post.post_id, **photo_data)
-                        session.add(photo)
-                        
+                    photo = Photo(post_id=post_id, **photo_data)
+                    session.add(photo)
+
+        session.commit()
+        return "Post updated successfully"
+
     except sqlalchemy.exc.IntegrityError:
         print("一意制約違反により、更新に失敗しました")
         session.rollback()
+        return "Post update failed due to integrity constraint violation"
+
     except Exception as e:
         print(f"Error: {e}")
         session.rollback()
+        return "Post update failed"
+
     finally:
         session.close()
-        
-    return "put"
+
 
 def mydelete(mymodel, user_id):
     # session構築

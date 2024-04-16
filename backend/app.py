@@ -60,29 +60,19 @@ def read_user():
 @app.route("/post", methods=['GET'])
 def get_post():
     result = crud.read_post(mymodels.Post.post_id)
-    
     if result is None:
         return jsonify({"error": "post not found"}), 400
     
     return jsonify(result), 200
 
-def create_post(user_id, store_name, review, rating):
-    session = Session()
-    try:
-        store = session.query(Store).filter_by(store_name=store_name).first()
-        if store:
-            post = Post(user_id=user_id, store_id=store.store_id, review=review, rating=rating)
-            session.add(post)
-            session.commit()
-            return post
-        else:
-            raise ValueError(f"Store '{store_name}' not found.")
-    except Exception as e:
-        session.rollback()
-        raise e
-    finally:
-        session.close()
 
+@app.route("/post", methods=['PUT'])
+def edit_post():
+    post_id = request.json.get('post_id')
+    values = request.json
+    
+    result = crud.edit_post(post_id, values)
+    return result, 200
 
 @app.route("/user", methods=['DELETE'])
 def delete_post():
