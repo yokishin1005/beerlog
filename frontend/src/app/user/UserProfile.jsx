@@ -1,16 +1,15 @@
 import React from 'react';
-import Link from 'next/link';
-import styles from './page.module.css';
 import ProfileCard from './ProfileCard';
 import PostGrid from './PostGrid';
 
 export default function UserProfile({ userInfo }) {
+  // `userInfo.posts` が配列であることを確認します。
+  const posts = Array.isArray(userInfo.posts) ? userInfo.posts : [];
+
   return (
     <>
       <ProfileCard userInfo={userInfo} />
-      {userInfo.posts && userInfo.posts.length > 0 && (
-        <PostGrid post={userInfo.posts[0]} />
-      )}
+      {posts.length > 0 && <PostGrid posts={posts} />}
     </>
   );
 }

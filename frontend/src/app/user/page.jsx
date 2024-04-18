@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import styles from './page.module.css';
 import UserProfile from './UserProfile';
 import fetchUserInfo from './fetchUserInfo';
+import Navbar from './Navbar';
 
 export default function Page() {
   const [userInfo, setUserInfo] = useState(null);
@@ -13,12 +13,19 @@ export default function Page() {
   }, []);
 
   if (!userInfo) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center text-xl">Loading...</div>
+      </div>
+    );
   }
 
   return (
-    <div className={styles.container}>
-      {userInfo && <UserProfile userInfo={userInfo} />}
+    <div>
+      <Navbar />
+      <div className="max-w-4xl mx-auto pt-20">
+        {userInfo && <UserProfile userInfo={userInfo} />}
+      </div>
     </div>
   );
 }
