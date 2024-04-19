@@ -7,7 +7,11 @@ export default function PostGrid({ posts }) {
 
     useEffect(() => {
         Modal.setAppElement('body');
-    }, []);
+        // postsをpost_idに基づいて降順にソート
+        if (posts && Array.isArray(posts)) {
+            posts.sort((a, b) => b.post_id - a.post_id);
+        }
+    }, [posts]); // postsが変更されるたびにソートを実行
 
     const openModal = (post) => {
         console.log(post);  // デバッグのためにpostオブジェクトを出力
@@ -43,17 +47,11 @@ export default function PostGrid({ posts }) {
                                 src={`data:image/jpeg;base64,${post.photos[0]}`}
                                 alt="Post Image"
                             />
-                            {/* <div className="p-4 bg-white">
-                                <h4 className="font-semibold">{post.title}</h4>
-                                <p className="text-sm text-gray-600">{post.description}</p>
-                                <p className="text-lg text-gray-600">評価: {post.rating}</p>
-                            </div> */}
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* モーダルの設定 */}
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}

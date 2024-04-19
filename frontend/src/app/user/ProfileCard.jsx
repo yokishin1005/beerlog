@@ -21,18 +21,19 @@ export default function ProfileCard({ userInfo }) {
           <div className="flex flex-col justify-center">
             <h2 className="text-2xl font-bold">{userInfo.user_name}</h2>
             <p className="text-gray-600">{userInfo.user_profile}</p>
-            <div className="flex mt-4 space-x-2">
+            <div className="flex mt-2 space-x-2">
               <div className="text-center">
+                {/* フォロワー、フォロー中、投稿はダミーの数字 */}
                 <span className="text-sm font-semibold">フォロワー</span>
-                <span className="block font-bold text-lg">{userInfo.follower_count}</span>
+                <span className="block font-bold text-sm">{userInfo.follower_count}256</span>
               </div>
               <div className="text-center">
                 <span className="text-sm font-semibold">フォロー中</span>
-                <span className="block font-bold text-lg">{userInfo.following_count}</span>
+                <span className="block font-bold text-sm">{userInfo.following_count}82</span>
               </div>
               <div className="text-center">
                 <span className="text-sm font-semibold">投稿</span>
-                <span className="block font-bold text-lg">{userInfo.post_count}</span>
+                <span className="block font-bold text-sm">{userInfo.post_count}4</span>
               </div>
             </div>
             <div className="mt-2">

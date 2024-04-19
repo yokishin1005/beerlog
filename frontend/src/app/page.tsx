@@ -104,7 +104,7 @@ const Home = () => {
           <img src="/logo.png" alt="ロゴ" className="h-36 animate-fadeInScaleUp" />
           {/* コメント */}
           <p className="font-sans mb-4 text-center" style={{ fontSize: '1rem', color: 'white' }}>
-            生ビールでがっかりする人を救う生ビールコミュニティ
+          ビール銘柄から始まるお店選び。今飲みたいビールに出会える。
           </p>
           {/* 検索オプションと検索窓 */}
           <div className="flex flex-col items-center justify-center">

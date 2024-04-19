@@ -23,7 +23,7 @@ export default function Page() {
   return (
     <div>
       <Navbar />
-      <div className="max-w-4xl mx-auto pt-20">
+      <div className="max-w-4xl mx-auto pt-20 mb-16">
         {userInfo && <UserProfile userInfo={userInfo} />}
       </div>
     </div>
