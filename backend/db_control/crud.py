@@ -13,36 +13,65 @@ from db_control.mymodels import Users, Post, Photo
 import base64
  
 
+
 def myinsert(mymodel, values):
     # session構築
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    query = insert(mymodel).values(values)
     try:
         # トランザクションを開始
         with session.begin():
-            # データの挿入
-            result = session.execute(query)
+            if isinstance(mymodel, mymodel.Post):  # 修正: isinstance を使用
+                # 投稿データを挿入する
+                query = insert(mymodel.Post).values(values)  # 修正: mymodels.Post を使用
+                result = session.execute(query)
+                inserted_post_id = result.inserted_primary_key[0]
+
+                # 画像データが含まれている場合は、Photo モデルにも挿入する
+                if 'photo' in values:
+                    photo_base64 = values['photo']
+                    photo_data = base64.b64decode(photo_base64)
+
+                    photo_values = {
+                        'post_id': inserted_post_id,
+                        'photo_data': photo_data
+                    }
+                    photo_query = insert(mymodel.Photo).values(photo_values)
+                    session.execute(photo_query)
+
+                return inserted_post_id
+            else:
+                # その他のモデルの場合は、通常の挿入処理を行う
+                query = insert(mymodel).values(values)
+                result = session.execute(query)
+                return result.inserted_primary_key[0]
+
     except sqlalchemy.exc.IntegrityError:
         print("一意制約違反により、挿入に失敗しました")
         session.rollback()
- 
-    # セッションを閉じる
-    session.close()
-    return "inserted"
- 
-def myselect(mymodel, user_id):
+        return None
+
+    finally:
+        # セッションを閉じる
+        session.close()
+
+
+def myselect(mymodel, user_id=None):  # 修正: user_id のデフォルト値を None に設定
     # セッションの構築
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    # `Post` と `Store` を結合し、必要なリレーションシップを事前読み込みするためのクエリを修正
-    query = session.query(mymodel).filter(mymodel.user_id == user_id).options(
-        joinedload(mymodel.posts).joinedload(Post.store),  # Store情報を含むようにJOIN
+    query = session.query(mymodel)
+
+    if user_id is not None:  # 修正: user_id が None でない場合のみフィルタリングを適用
+        query = query.filter(mymodel.user_id == user_id)
+
+    query = query.options(
+        joinedload(mymodel.posts).joinedload(Post.store),
         joinedload(mymodel.posts).joinedload(Post.photos)
     )
-    
+
     try:
         # トランザクションの開始
         with session.begin():
@@ -66,7 +95,7 @@ def myselect(mymodel, user_id):
                         "post_id": post.post_id,
                         "review": post.review,
                         "rating": post.rating,
-                        "store_name": post.store.store_name if post.store else None,  # joined Storeテーブルからstore_nameを取得
+                        "store_name": post.store.store_name if post.store else None,
                         "photos": [
                             base64.b64encode(photo.photo_data).decode() if photo.photo_data else None
                             for photo in post.photos
@@ -76,41 +105,6 @@ def myselect(mymodel, user_id):
                 ]
             }
             return result_dict
-    finally:
-        session.close()
-        
-        
-def read_post(post_id):
-    # session構築
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    try:
-        # トランザクションを開始
-        with session.begin():
-            # Postsのデータを取得し、関連するPhotosをプリロードする
-            post = session.query(Post).options(joinedload(Post.photos), joinedload(Post.store)).filter_by(post_id=post_id).first()
-            if post is None:
-                return {"error": "Post not found"}
-            
-            # 結果をオブジェクトから辞書に変換
-            result = {
-                "store_name": post.store.store_name,
-                "post_id": post.post_id,
-                "user_id": post.user_id,
-                "review": post.review,
-                "rating": post.rating,
-                "photos": [
-                    {
-                        "photo_id": photo.photo_id,
-                        "photo_data": base64.b64encode(photo.photo_data).decode() if photo.photo_data else None
-                    }
-                    for photo in post.photos
-                ]
-            }
-            return result
-    except Exception as e:
-        print(f"Error: {e}")
-        return {"error": "Internal server error"}
     finally:
         session.close()
         

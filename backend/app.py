@@ -33,6 +33,13 @@ jwt = JWTManager(app)
 def index():
     return "<p>Flask top page!</p>"
 
+@app.route("/post", methods=['POST'])
+def create_post():
+    values = request.get_json()
+    tmp = crud.myinsert(mymodels.Post, values)
+    result = crud.myselect(mymodels.Users, values.get("user_id"))  # 修正: tmp.user_id を使用
+    return result, 200
+
 @app.route('/login', methods=['POST'])
 def login():
     user_id = request.json.get('user_id', None)

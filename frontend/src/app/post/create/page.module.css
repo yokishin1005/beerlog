@@ -1,0 +1,59 @@
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .postDetails {
+    background-color: #fff;
+    border: 1px solid #dbdbdb;
+    border-radius: 3px;
+    margin-bottom: 20px;
+  }
+  
+  .postTitle {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 20px;
+  }
+  
+  .postItem {
+    border-bottom: 1px solid #dbdbdb;
+    padding: 20px;
+  }
+  
+  .postStore h3,
+  .postReview h3,
+  .postRating h3,
+  .postPhotos h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .postStore p,
+  .postReview p,
+  .postRating p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  
+  .postReview p,
+  .postRating p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  
+  .postPhotos {
+    margin-top: 20px;
+  }
+  
+  .postPhoto {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    margin-bottom: 10px;
+    border-radius: 3px;
+  }
