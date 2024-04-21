@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence, Numeric
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, LargeBinary, Text
@@ -49,27 +49,30 @@ class Photo(Base):
 # Userモデルに'posts'関係を追加
     Users.posts = relationship('Post', order_by=Post.post_id, back_populates='users')
     
-# Store テーブル定義
 class Store(Base):
     __tablename__ = 'stores'
     store_id = Column(Integer, Sequence('store_id_seq'), primary_key=True, autoincrement=True)
     store_name = Column(String(255), nullable=False)
     store_address = Column(String(255), nullable=False)
-    store_phonenumber = Column(String(255), nullable=True)
-    posts = relationship('Post', back_populates='store') 
+    store_contact = Column(String(255), nullable=True)
+    lat = Column(Numeric(10, 8))  # 全体で10桁、小数点以下8桁
+    lng = Column(Numeric(11, 8))  # 全体で11桁、小数点以下8桁
+    brand_id = Column(String(255), ForeignKey('brands.brand_id'))
+    posts = relationship('Post', back_populates='store')
 
-# Brand テーブル定義
 class Brand(Base):
     __tablename__ = 'brands'
     brand_id = Column(Integer, Sequence('brand_id_seq'), primary_key=True, autoincrement=True)
-    store_id = Column(Integer, ForeignKey('stores.store_id'), nullable=False)
     brand_name = Column(String(255), nullable=False)
+    brand_picture = Column(LargeBinary)
+    manufacturer_id = Column(String(255), ForeignKey('manufacturers.manufacturer_id'))
+    manufacturer = relationship('Manufacturer', back_populates='brands')
 
-# Manufacturer テーブル定義
 class Manufacturer(Base):
     __tablename__ = 'manufacturers'
     manufacturer_id = Column(Integer, Sequence('manufacturer_id_seq'), primary_key=True, autoincrement=True)
     manufacturer_name = Column(String(255), nullable=False)
+    brands = relationship('Brand', back_populates='manufacturer')
     
 if __name__ == '__main__':
     app.run(debug=True)

@@ -15,7 +15,6 @@ from geopy.geocoders import Nominatim
 import folium
 from geopy.exc import GeocoderUnavailable
 
-
 def myselect(mymodel, user_id=None):  # 修正: user_id のデフォルト値を None に設定
     # セッションの構築
     Session = sessionmaker(bind=engine)
