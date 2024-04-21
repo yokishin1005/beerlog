@@ -11,6 +11,9 @@ import pandas as pd
 from db_control.connect import engine
 from db_control.mymodels import Users, Post, Photo, Store, Brand
 import base64
+from geopy.geocoders import Nominatim
+import folium
+from geopy.exc import GeocoderUnavailable
 
 
 def myselect(mymodel, user_id=None):  # 修正: user_id のデフォルト値を None に設定
@@ -148,3 +151,38 @@ def suggest_store(query):
         return suggestions
     else:
         return []
+    
+def get_nearby_stores(latitude: float, longitude: float):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    stores = session.query(Store).all()
+
+    geolocator = Nominatim(user_agent="my_app", timeout=10)
+
+    store_locations = []
+    for store in stores:
+        try:
+            location = geolocator.geocode(store.store_address)
+            if location:
+                store_locations.append({
+                    "store_id": store.store_id,
+                    "store_name": store.store_name,
+                    "latitude": location.latitude,
+                    "longitude": location.longitude
+                })
+        except GeocoderUnavailable as e:
+            print(f"Geocoding failed for address {store.store_address}, error: {e}")
+            
+    map_data = folium.Map(location=[latitude, longitude], zoom_start=12)
+    for store_location in store_locations:
+        folium.Marker(
+            location=[store_location["latitude"], store_location["longitude"]],
+            popup=store_location["store_name"]
+        ).add_to(map_data)
+
+    map_html = map_data._repr_html_()
+
+    session.close()
+
+    return map_html

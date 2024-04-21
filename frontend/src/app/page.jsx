@@ -1,15 +1,16 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { useRouter } from "next/navigation"; // ルーターフックのインポート
+import React, { useState, useEffect } from 'react';
+import { useRouter } from "next/navigation";
 import './globals.css';
 import Link from "next/link";
-
+import { fetchStoresByLocation } from './services/locationServices';
 
 const Home = () => {
   const [isJwt, setIsJwt] = useState(false);
   const [jwtMessage, setJwtMessage] = useState('');
   const [searchType, setSearchType] = useState('keyword');
   const [searchQuery, setSearchQuery] = useState('');
+  const [mapData, setMapData] = useState('');
 
   const router = useRouter();
 
@@ -22,6 +23,7 @@ const Home = () => {
       setJwtMessage('JWTなし');
     }
   }, []);
+
 
   const handleLoginRedirect = () => {
     router.push('/login'); // `/login` への遷移
@@ -119,10 +121,10 @@ const Home = () => {
               </button>
               {/* 中央のボタン */}
               <button 
-                className="bg-amber-600 text-white py-1 px-4 hover:bg-amber-700 focus:outline-none transition-colors duration-200 flex-grow text-sm"
-                onClick={() => setSearchType('location')}
+                  className="bg-amber-600 text-white py-1 px-4 hover:bg-amber-700 focus:outline-none transition-colors duration-200 flex-grow text-sm"
+                  onClick={() => fetchStoresByLocation(setMapData)}
               >
-                現在地から探す
+                  現在地から探す
               </button>
               {/* 最後のボタン */}
               <button 

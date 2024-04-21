@@ -4,7 +4,9 @@ import json
 from flask_cors import CORS
 from db_control import crud, mymodels
 import base64
-
+from sqlalchemy.orm import Session
+from geopy.geocoders import Nominatim
+import folium
 import requests
 
 # Azure Database for MySQL
@@ -97,6 +99,17 @@ def suggest_store():
     suggestions = crud.suggest_store(query)
     return jsonify(suggestions), 200
 
+@app.route("/search", methods=['GET'])
+def search_nearby_stores():
+    latitude = request.args.get('latitude', type=float)
+    longitude = request.args.get('longitude', type=float)
+    
+    if not latitude or not longitude:
+        return jsonify({"error": "Missing latitude or longitude parameters"}), 400
+
+    map_html = crud.get_nearby_stores(latitude, longitude)
+    
+    return jsonify({"map_data": map_html}), 200
 
 @app.route("/fetchtest")
 def fetchtest():
