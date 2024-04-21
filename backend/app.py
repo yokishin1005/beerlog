@@ -33,12 +33,6 @@ jwt = JWTManager(app)
 def index():
     return "<p>Flask top page!</p>"
 
-@app.route("/post", methods=['POST'])
-def create_post():
-    values = request.get_json()
-    tmp = crud.myinsert(mymodels.Post, values)
-    result = crud.myselect(mymodels.Users, values.get("user_id"))  # 修正: tmp.user_id を使用
-    return result, 200
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -81,12 +75,28 @@ def edit_post():
     result = crud.edit_post(post_id, values)
     return result, 200
 
-@app.route("/user", methods=['DELETE'])
-def delete_post():
-    model = mymodels.Post
-    target_id = request.args.get('post_id') #クエリパラメータ
-    result = crud.mydelete(model, target_id)
-    return result, 200
+
+@app.route("/post", methods=['POST'])
+@jwt_required()
+def create_post():
+    user_id = get_jwt_identity()  # JWTからユーザーIDを取得
+    review = request.form.get('review')
+    rating = request.form.get('rating')
+    store_name = request.form.get('store_name')
+    photo_file = request.files.get('photo')  # ファイルフィールド名を指定
+
+    result = crud.create_post(user_id, review, rating, store_name, photo_file)
+    if result['status'] == 'success':
+        return jsonify(result), 201
+    else:
+        return jsonify(result), 400
+
+@app.route("/store/suggest", methods=['GET'])
+def suggest_store():
+    query = request.args.get('query')
+    suggestions = crud.suggest_store(query)
+    return jsonify(suggestions), 200
+
 
 @app.route("/fetchtest")
 def fetchtest():

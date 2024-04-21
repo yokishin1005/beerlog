@@ -9,52 +9,8 @@ import json
 import pandas as pd
 
 from db_control.connect import engine
-from db_control.mymodels import Users, Post, Photo
+from db_control.mymodels import Users, Post, Photo, Store, Brand
 import base64
- 
-
-
-def myinsert(mymodel, values):
-    # session構築
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-    try:
-        # トランザクションを開始
-        with session.begin():
-            if isinstance(mymodel, mymodel.Post):  # 修正: isinstance を使用
-                # 投稿データを挿入する
-                query = insert(mymodel.Post).values(values)  # 修正: mymodels.Post を使用
-                result = session.execute(query)
-                inserted_post_id = result.inserted_primary_key[0]
-
-                # 画像データが含まれている場合は、Photo モデルにも挿入する
-                if 'photo' in values:
-                    photo_base64 = values['photo']
-                    photo_data = base64.b64decode(photo_base64)
-
-                    photo_values = {
-                        'post_id': inserted_post_id,
-                        'photo_data': photo_data
-                    }
-                    photo_query = insert(mymodel.Photo).values(photo_values)
-                    session.execute(photo_query)
-
-                return inserted_post_id
-            else:
-                # その他のモデルの場合は、通常の挿入処理を行う
-                query = insert(mymodel).values(values)
-                result = session.execute(query)
-                return result.inserted_primary_key[0]
-
-    except sqlalchemy.exc.IntegrityError:
-        print("一意制約違反により、挿入に失敗しました")
-        session.rollback()
-        return None
-
-    finally:
-        # セッションを閉じる
-        session.close()
 
 
 def myselect(mymodel, user_id=None):  # 修正: user_id のデフォルト値を None に設定
@@ -150,19 +106,45 @@ def edit_post(post_id, values):
         session.close()
 
 
-def mydelete(mymodel, user_id):
-    # session構築
+def create_post(user_id, review, rating, store_name, photo_file):
     Session = sessionmaker(bind=engine)
     session = Session()
-    query = delete(mymodel).where(mymodel.user_id==user_id)
     try:
-        # トランザクションを開始
-        with session.begin():
-            result = session.execute(query)
-    except sqlalchemy.exc.IntegrityError:
-        print("一意制約違反により、挿入に失敗しました")
+        # store_nameに基づいてstore_idを取得
+        store = session.query(Store).filter(Store.store_name == store_name).first()
+        if store is None:
+            return {"status": "error", "message": "Store not found"}
+        store_id = store.store_id
+
+        # 新しいPostを作成
+        new_post = Post(user_id=user_id, store_id=store_id, review=review, rating=rating)
+        session.add(new_post)
+        session.commit()
+
+        # 写真データを取得し、バイナリデータに変換
+        photo_data = photo_file.read()
+
+        # 新しいPhotoを作成
+        new_photo = Photo(post_id=new_post.post_id, photo_data=photo_data)
+        session.add(new_photo)
+        session.commit()
+
+        return {"status": "success", "message": "Post created successfully"}
+    except Exception as e:
         session.rollback()
- 
-    # セッションを閉じる
-    session.close()
-    return user_id + " is deleted"
+        return {"status": "error", "message": str(e)}
+    finally:
+        session.close()
+
+def suggest_store(query):
+    
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    
+    if query:
+        # store_nameに部分一致するStoreを最大5件取得
+        stores = session.query(Store).filter(Store.store_name.like(f'%{query}%')).limit(5).all()
+        suggestions = [store.store_name for store in stores]
+        return suggestions
+    else:
+        return []
