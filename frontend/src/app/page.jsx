@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
 import './globals.css';
 import Link from "next/link";
-import { fetchStoresByLocation } from './services/locationServices';
 
 const Home = () => {
   const [isJwt, setIsJwt] = useState(false);
@@ -122,8 +121,8 @@ const Home = () => {
               {/* 中央のボタン */}
               <button 
                   className="bg-amber-600 text-white py-1 px-4 hover:bg-amber-700 focus:outline-none transition-colors duration-200 flex-grow text-sm"
-                  onClick={() => fetchStoresByLocation(setMapData)}
-              >
+                  onClick={() => router.push('/search')}
+                >
                   現在地から探す
               </button>
               {/* 最後のボタン */}

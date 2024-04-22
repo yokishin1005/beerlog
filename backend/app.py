@@ -8,12 +8,15 @@ from sqlalchemy.orm import Session
 from geopy.geocoders import Nominatim
 import folium
 import requests
+from sqlalchemy.orm import sessionmaker, Session
+from db_control.connect import engine
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Azure Database for MySQL
 # REST APIでありCRUDを持っている
 app = Flask(__name__)
 CORS(app)
- 
 
 @app.route("/")
 def index():
@@ -34,7 +37,6 @@ jwt = JWTManager(app)
 @app.route("/")
 def index():
     return "<p>Flask top page!</p>"
-
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -99,17 +101,24 @@ def suggest_store():
     suggestions = crud.suggest_store(query)
     return jsonify(suggestions), 200
 
-@app.route("/search", methods=['GET'])
-def search_nearby_stores():
-    latitude = request.args.get('latitude', type=float)
-    longitude = request.args.get('longitude', type=float)
-    
-    if not latitude or not longitude:
-        return jsonify({"error": "Missing latitude or longitude parameters"}), 400
+@app.route("/stores")
+def stores_mapping():
+    db = None
+    try:
+        db = SessionLocal()
+        
+        # クエリパラメータから緯度と経度を取得
+        latitude = float(request.args.get('lat'))
+        longitude = float(request.args.get('lng'))
+        
+        store_dicts, brand_dicts, map_html = crud.get_stores_with_map(db, latitude, longitude)
+        return jsonify({"stores": store_dicts, "brands": brand_dicts, "map_html": map_html})
+    finally:
+        if db is not None:
+            db.close()
 
-    map_html = crud.get_nearby_stores(latitude, longitude)
-    
-    return jsonify({"map_data": map_html}), 200
+if __name__ == "__main__":
+    app.run(debug=True)
 
 @app.route("/fetchtest")
 def fetchtest():

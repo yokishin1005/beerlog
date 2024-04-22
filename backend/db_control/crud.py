@@ -7,13 +7,19 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker, joinedload
 import json
 import pandas as pd
-
 from db_control.connect import engine
 from db_control.mymodels import Users, Post, Photo, Store, Brand
+from sqlalchemy.orm import sessionmaker
+from db_control.connect import engine
 import base64
 from geopy.geocoders import Nominatim
 import folium
 from geopy.exc import GeocoderUnavailable
+from sqlalchemy.orm import Session
+import random
+
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def myselect(mymodel, user_id=None):  # 修正: user_id のデフォルト値を None に設定
     # セッションの構築
@@ -151,37 +157,60 @@ def suggest_store(query):
     else:
         return []
     
-def get_nearby_stores(latitude: float, longitude: float):
-    Session = sessionmaker(bind=engine)
-    session = Session()
+def get_stores_with_map(db: Session, latitude: float, longitude: float):
+    try:
+        stores = db.query(Store).all()
+        brands = db.query(Brand).all()
+        
+        # Convert store and brand objects to dictionaries
+        store_dicts = [
+            {k: v for k, v in store.__dict__.items() if k != '_sa_instance_state'}
+            for store in stores
+        ]
+        brand_dicts = [
+            {k: (base64.b64encode(v).decode('utf-8') if k == 'brand_picture' else v)
+             for k, v in brand.__dict__.items() if k != '_sa_instance_state'}
+            for brand in brands
+        ]
+        
+        # 地図の作成
+        map_data = folium.Map(location=[latitude, longitude], zoom_start=16)
 
-    stores = session.query(Store).all()
-
-    geolocator = Nominatim(user_agent="my_app", timeout=10)
-
-    store_locations = []
-    for store in stores:
-        try:
-            location = geolocator.geocode(store.store_address)
-            if location:
-                store_locations.append({
-                    "store_id": store.store_id,
-                    "store_name": store.store_name,
-                    "latitude": location.latitude,
-                    "longitude": location.longitude
-                })
-        except GeocoderUnavailable as e:
-            print(f"Geocoding failed for address {store.store_address}, error: {e}")
-            
-    map_data = folium.Map(location=[latitude, longitude], zoom_start=12)
-    for store_location in store_locations:
-        folium.Marker(
-            location=[store_location["latitude"], store_location["longitude"]],
-            popup=store_location["store_name"]
-        ).add_to(map_data)
-
-    map_html = map_data._repr_html_()
-
-    session.close()
-
-    return map_html
+        # Define a list of colors for the brands
+        colors = ["red", "blue", "green", "purple", "orange", "darkred", "lightred", "beige", "darkblue", "darkgreen", "cadetblue", "darkpurple", "white", "pink", "lightblue", "lightgreen", "gray", "black", "lightgray"]
+        
+        # ブランドごとに色を割り当て
+        brand_colors = {}
+        for brand in brand_dicts:
+            index = hash(brand['brand_id']) % len(colors)  # Use the hash of brand_id to pick a color
+            brand_colors[brand['brand_id']] = colors[index]
+        
+        for store in store_dicts:
+            brand = next((b for b in brand_dicts if b['brand_id'] == store['brand_id']), None)
+            if brand:
+                brand_picture_base64 = brand['brand_picture']
+                popup_html = f'''
+                    <div>
+                        <img src="data:image/png;base64,{brand_picture_base64}" width="100" height="100">
+                        <h3>{store['store_name']}</h3>
+                        <p>連絡先: {store['store_contact']}</p>
+                    </div>
+                '''
+                
+                # マーカーにマウスオーバーイベントを追加
+                marker = folium.Marker(
+                    location=[store['lat'], store['lng']],
+                    popup=folium.Popup(popup_html, max_width=300),
+                    icon=folium.Icon(color=brand_colors[store['brand_id']])
+                )
+                marker.add_child(folium.Tooltip(popup_html))
+                marker.add_to(map_data)
+        
+        # 地図をHTMLに変換
+        map_html = map_data._repr_html_()
+        
+        return store_dicts, brand_dicts, map_html
+    
+    except Exception as e:
+        db.rollback()
+        raise e
