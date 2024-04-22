@@ -39,7 +39,7 @@ const Navbar = ({ isJwt, setIsJwt, setJwtMessage }) => {
   };
 
   return (
-    <div className='container-body absolute top-0 right-0 left-0 z-30 flex justify-between items-center pt-3 pb-10'>
+    <div className='container-body fixed top-0 right-0 left-0 z-30 flex justify-between items-center pt-2 pb-2 bg-white'>
       <div className="flex space-x-4 p-4 ml-20">
         <button onClick={handleAboutRedirect} className="font-sans font-semibold text-gray-500 py-2 px-4 rounded-xl hover:bg-amber-400 focus:outline-none transition-colors duration-200">びあログとは？</button>
         <button onClick={handleIntroductionRedirect} className="font-sans font-semibold text-gray-500 py-2 px-4 rounded-xl hover:bg-amber-400 focus:outline-none transition-colors duration-200">おいしい生ビール入門</button>

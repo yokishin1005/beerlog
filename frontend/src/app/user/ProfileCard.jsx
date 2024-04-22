@@ -33,7 +33,7 @@ export default function ProfileCard({ userInfo }) {
               </div>
               <div className="text-center">
                 <span className="text-sm font-semibold">投稿</span>
-                <span className="block font-bold text-sm">{userInfo.post_count}4</span>
+                <span className="block font-bold text-sm">{userInfo.post_count}8</span>
               </div>
             </div>
             <div className="mt-2">
