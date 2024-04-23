@@ -3,6 +3,7 @@ from flask import jsonify
 import json
 from flask_cors import CORS
 from db_control import crud, mymodels
+from db_control.mymodels import Store
 import base64
 from sqlalchemy.orm import Session
 from geopy.geocoders import Nominatim
@@ -95,11 +96,11 @@ def create_post():
     else:
         return jsonify(result), 400
 
-@app.route("/store/suggest", methods=['GET'])
-def suggest_store():
-    query = request.args.get('query')
-    suggestions = crud.suggest_store(query)
-    return jsonify(suggestions), 200
+# @app.route("/store/suggest", methods=['GET'])
+# def suggest_store():
+#     query = request.args.get('query')
+#     suggestions = crud.suggest_store(query)
+#     return jsonify(suggestions), 200
 
 @app.route("/stores")
 def stores_mapping():
@@ -116,6 +117,35 @@ def stores_mapping():
     finally:
         if db is not None:
             db.close()
+# @app.route("/stores")
+# def stores_mapping():
+#     db = SessionLocal()
+#     try:
+#         # クエリパラメータから緯度と経度を取得し、それらが存在しない場合はデフォルト値を使用
+#         latitude = request.args.get('lat', default=35.6895, type=float)
+#         longitude = request.args.get('lng', default=139.6917, type=float)
+#         # すべての店舗情報をデータベースから取得する
+#         stores = db.query(mymodels.Store).all()
+        
+#         # 店舗の情報を辞書形式でリストに格納する
+#         store_dicts = [
+#             {
+#                 "store_id": store.store_id,
+#                 "store_name": store.store_name,
+#                 "lat": float(store.lat),
+#                 "lng": float(store.lng),
+#                 # 必要に応じて他のフィールドも追加可能
+#             }
+#             for store in stores
+#         ]
+        
+#         # フロントエンドに店舗情報のリストをJSON形式で返す
+#         return jsonify(store_dicts)
+#     except Exception as e:
+#         # エラーハンドリング
+#         return jsonify({"error": str(e)}), 500
+#     finally:
+#         db.close()
 
 if __name__ == "__main__":
     app.run(debug=True)
