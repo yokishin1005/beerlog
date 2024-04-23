@@ -11,23 +11,10 @@ import folium
 import requests
 from sqlalchemy.orm import sessionmaker, Session
 from db_control.connect import engine
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from werkzeug.security import check_password_hash
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Azure Database for MySQL
-# REST APIでありCRUDを持っている
-app = Flask(__name__)
-CORS(app)
-
-@app.route("/")
-def index():
-    return "<p>Flask top page!</p>"
-
-from flask import Flask, request, jsonify
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
-from flask_cors import CORS
-from db_control import crud, mymodels
-from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
 CORS(app)
@@ -62,7 +49,6 @@ def read_user():
     
     return jsonify(result_dict), 200
 
-
 @app.route("/post", methods=['GET'])
 def get_post():
     result = crud.read_post(mymodels.Post.post_id)
@@ -71,7 +57,6 @@ def get_post():
     
     return jsonify(result), 200
 
-
 @app.route("/post", methods=['PUT'])
 def edit_post():
     post_id = request.json.get('post_id')
@@ -79,7 +64,6 @@ def edit_post():
     
     result = crud.edit_post(post_id, values)
     return result, 200
-
 
 @app.route("/post", methods=['POST'])
 @jwt_required()
@@ -96,61 +80,32 @@ def create_post():
     else:
         return jsonify(result), 400
 
-# @app.route("/store/suggest", methods=['GET'])
-# def suggest_store():
-#     query = request.args.get('query')
-#     suggestions = crud.suggest_store(query)
-#     return jsonify(suggestions), 200
+@app.route("/store/suggest", methods=['GET'])
+def suggest_store():
+    query = request.args.get('query')
+    suggestions = crud.suggest_store(query)
+    return jsonify(suggestions), 200
 
 @app.route("/stores")
 def stores_mapping():
-    db = None
+    db = SessionLocal()
     try:
-        db = SessionLocal()
-        
-        # クエリパラメータから緯度と経度を取得
-        latitude = float(request.args.get('lat'))
-        longitude = float(request.args.get('lng'))
+        # クエリパラメータから緯度と経度を取得し、それらが存在しない場合はデフォルト値を使用
+        latitude = request.args.get('lat', default=35.6895, type=float)
+        longitude = request.args.get('lng', default=139.6917, type=float)
         
         store_dicts, brand_dicts, map_html = crud.get_stores_with_map(db, latitude, longitude)
         return jsonify({"stores": store_dicts, "brands": brand_dicts, "map_html": map_html})
+    except Exception as e:
+        # エラーハンドリング
+        return jsonify({"error": str(e)}), 500
     finally:
-        if db is not None:
-            db.close()
-# @app.route("/stores")
-# def stores_mapping():
-#     db = SessionLocal()
-#     try:
-#         # クエリパラメータから緯度と経度を取得し、それらが存在しない場合はデフォルト値を使用
-#         latitude = request.args.get('lat', default=35.6895, type=float)
-#         longitude = request.args.get('lng', default=139.6917, type=float)
-#         # すべての店舗情報をデータベースから取得する
-#         stores = db.query(mymodels.Store).all()
-        
-#         # 店舗の情報を辞書形式でリストに格納する
-#         store_dicts = [
-#             {
-#                 "store_id": store.store_id,
-#                 "store_name": store.store_name,
-#                 "lat": float(store.lat),
-#                 "lng": float(store.lng),
-#                 # 必要に応じて他のフィールドも追加可能
-#             }
-#             for store in stores
-#         ]
-        
-#         # フロントエンドに店舗情報のリストをJSON形式で返す
-#         return jsonify(store_dicts)
-#     except Exception as e:
-#         # エラーハンドリング
-#         return jsonify({"error": str(e)}), 500
-#     finally:
-#         db.close()
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        db.close()
 
 @app.route("/fetchtest")
 def fetchtest():
     response = requests.get('https://jsonplaceholder.typicode.com/users')
     return response.json(), 200
+
+if __name__ == "__main__":
+    app.run(debug=True)
