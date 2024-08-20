@@ -19,3 +19,7 @@ This is a Flask-Next.js repo
 
 ■ http://localhost:3000/login にアクセス
 
+## ログインデータ
+- user1
+- sapporolove
+
